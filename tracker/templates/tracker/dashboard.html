@@ -4,107 +4,301 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HR Dashboard - Real-Time Monitoring</title>
-    <!-- Load Bootstrap CSS for styling -->
+    <title>Enterprise Analytics Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Load Chart.js for Graphs -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
-            background-color: #f8f9fa;
+            background-color: #f4f7f6;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
         }
 
-        .card {
-            border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        /* ProHance Style Sidebar */
+        .sidebar {
+            height: 100vh;
+            background-color: #1e293b;
+            color: white;
+            position: fixed;
+            width: 250px;
+            padding-top: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
         }
 
-        .score-high {
-            color: #198754;
+        .sidebar a {
+            color: #cbd5e1;
+            text-decoration: none;
+            padding: 12px 20px;
+            display: block;
+            transition: 0.3s;
+            font-weight: 500;
+        }
+
+        .sidebar a:hover,
+        .sidebar a.active {
+            background-color: #334155;
+            color: white;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .sidebar-brand {
+            font-size: 1.2rem;
             font-weight: bold;
+            text-align: center;
+            margin-bottom: 30px;
+            letter-spacing: 1px;
+            color: #fff;
         }
 
-        .score-med {
-            color: #ffc107;
-            font-weight: bold;
+        /* Main Content Area */
+        .main-content {
+            margin-left: 250px;
+            padding: 20px 30px;
         }
 
-        .score-low {
-            color: #dc3545;
-            font-weight: bold;
+        .topbar {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* KPI Cards */
+        .kpi-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
+            border: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: transform 0.2s;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .kpi-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .bg-icon-blue {
+            background-color: #eff6ff;
+            color: #3b82f6;
+        }
+
+        .bg-icon-green {
+            background-color: #f0fdf4;
+            color: #16a34a;
+        }
+
+        .bg-icon-red {
+            background-color: #fef2f2;
+            color: #ef4444;
+        }
+
+        .bg-icon-purple {
+            background-color: #faf5ff;
+            color: #a855f7;
+        }
+
+        /* Data Tables & Charts */
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
+            border: 1px solid #e2e8f0;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
+            border: 1px solid #e2e8f0;
+        }
+
+        .badge-prohance-high {
+            background-color: #dcfce7;
+            color: #166534;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .badge-prohance-med {
+            background-color: #fef08a;
+            color: #854d0e;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .badge-prohance-low {
+            background-color: #fee2e2;
+            color: #991b1b;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-weight: 600;
         }
     </style>
 </head>
 
 <body>
-    <nav class="navbar navbar-dark bg-dark mb-4">
-        <div class="container">
-            <a class="navbar-brand" href="#">📊 AI-Driven Real-Time Monitoring System</a>
-            <span class="navbar-text text-white">Manager / HR View</span>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <i class="bi bi-layers-fill text-primary"></i> WorkAnalytics OS
         </div>
-    </nav>
+        <a href="#" class="active"><i class="bi bi-grid-1x2-fill me-2"></i> Executive Dashboard</a>
+        <a href="#"><i class="bi bi-people-fill me-2"></i> Workforce Activity</a>
+        <a href="#"><i class="bi bi-clock-history me-2"></i> Time Distribution</a>
+        <a href="#"><i class="bi bi-file-earmark-bar-graph-fill me-2"></i> Advanced Reports</a>
+        <hr class="border-secondary mx-3">
+        <a href="{% url 'logout' %}"><i class="bi bi-box-arrow-left me-2"></i> Sign Out</a>
+    </div>
 
-    <div class="container mb-5">
+    <!-- Main Content -->
+    <div class="main-content">
 
-        <!-- Top Section: Analytics Chart -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card p-4">
-                    <h4 class="mb-3">Recent Productivity Trends</h4>
-                    <canvas id="productivityChart" height="80"></canvas>
+        <!-- Topbar -->
+        <div class="topbar">
+            <h4 class="mb-0 text-secondary">Overview</h4>
+            <div class="d-flex align-items-center">
+                <span class="me-3 text-muted"><i class="bi bi-calendar3"></i> Today</span>
+                <div class="dropdown">
+                    <button class="btn btn-light rounded-pill px-4 border" type="button">
+                        <i class="bi bi-person-circle text-primary"></i> {{ request.user.username }} (Admin)
+                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- Bottom Section: Data Table -->
-        <h2 class="mb-3">Employee Daily Summaries</h2>
-        <div class="card p-4">
+        <!-- KPI Widgets Row -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-3">
+                <div class="kpi-card">
+                    <div>
+                        <p class="text-muted mb-1 fw-bold" style="font-size: 0.85rem;">TOTAL LOGGED HOURS</p>
+                        <h3 class="mb-0 fw-bold">{{ kpi_total_hours }}<span class="fs-6 text-muted fw-normal">h</span>
+                        </h3>
+                    </div>
+                    <div class="kpi-icon bg-icon-blue"><i class="bi bi-clock-fill"></i></div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="kpi-card">
+                    <div>
+                        <p class="text-muted mb-1 fw-bold" style="font-size: 0.85rem;">AVG PRODUCTIVITY</p>
+                        <h3 class="mb-0 fw-bold">{{ kpi_avg_score }}<span class="fs-6 text-muted fw-normal">%</span>
+                        </h3>
+                    </div>
+                    <div class="kpi-icon bg-icon-purple"><i class="bi bi-graph-up-arrow"></i></div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="kpi-card">
+                    <div>
+                        <p class="text-muted mb-1 fw-bold" style="font-size: 0.85rem;">PRODUCTIVE HOURS</p>
+                        <h3 class="mb-0 fw-bold">{{ kpi_prod_hours }}<span class="fs-6 text-muted fw-normal">h</span>
+                        </h3>
+                    </div>
+                    <div class="kpi-icon bg-icon-green"><i class="bi bi-check-circle-fill"></i></div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="kpi-card">
+                    <div>
+                        <p class="text-muted mb-1 fw-bold" style="font-size: 0.85rem;">IDLE/DISTRACTED</p>
+                        <h3 class="mb-0 fw-bold">{{ kpi_idle_hours }}<span class="fs-6 text-muted fw-normal">h</span>
+                        </h3>
+                    </div>
+                    <div class="kpi-icon bg-icon-red"><i class="bi bi-cup-hot-fill"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row (Aligned to exact same height using flexbox) -->
+        <div class="row mb-4 align-items-stretch">
+
+            <!-- Trend Bar Chart -->
+            <div class="col-md-8">
+                <div class="chart-container h-100 d-flex flex-column mb-0">
+                    <h5 class="text-secondary mb-4">Productivity Trend Analysis</h5>
+                    <div class="flex-grow-1" style="position: relative; min-height: 250px;">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Time Distribution Doughnut Chart -->
+            <div class="col-md-4">
+                <div class="chart-container h-100 d-flex flex-column mb-0">
+                    <h5 class="text-secondary mb-4">Organization Time Split</h5>
+                    <div class="flex-grow-1" style="position: relative; min-height: 250px;">
+                        <canvas id="distributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Data Table -->
+        <div class="table-container">
+            <h5 class="text-secondary mb-4">Detailed Work Logs</h5>
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-light">
+                <table class="table table-borderless table-hover align-middle">
+                    <thead class="border-bottom text-muted" style="font-size: 0.9rem;">
                         <tr>
-                            <th>Date</th>
-                            <th>Employee Name</th>
-                            <th>Total Hours</th>
-                            <th>Productive Hours</th>
-                            <th>AI Score</th>
-                            <th>Burnout Risk</th>
-                            <th>AI Notes</th>
+                            <th>DATE</th>
+                            <th>EMPLOYEE</th>
+                            <th>TOTAL TIME</th>
+                            <th>PRODUCTIVE TIME</th>
+                            <th>AI SCORE</th>
+                            <th>HEALTH FLAG</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for summary in summaries %}
-                        <tr>
-                            <td>{{ summary.date }}</td>
-                            <td><strong>{{ summary.user.username }}</strong></td>
+                        <tr class="border-bottom">
+                            <td><span class="text-muted"><i class="bi bi-calendar-event me-1"></i>{{summary.date}}</span></td>
+                            <td class="fw-bold text-dark">{{ summary.user.username }}</td>
                             <td>{{ summary.total_working_hours }}h</td>
                             <td>{{ summary.productive_hours }}h</td>
-
-                            <!-- Color code the score -->
-                            <td class="
-                                {% if summary.productivity_score >= 70 %} score-high 
-                                {% elif summary.productivity_score >= 40 %} score-med 
-                                {% else %} score-low {% endif %}
-                            ">
-                                {{ summary.productivity_score }} / 100
+                            <td>
+                                <span
+                                    class="{% if summary.productivity_score >= 70 %} badge-prohance-high {% elif summary.productivity_score >= 40 %} badge-prohance-med {% else %} badge-prohance-low {% endif %}">
+                                    {{ summary.productivity_score }}%
+                                </span>
                             </td>
-
-                            <!-- Color code the burnout risk -->
                             <td>
                                 {% if summary.burnout_risk == 'HIGH' %}
-                                <span class="badge bg-danger">HIGH</span>
+                                <span class="badge bg-danger rounded-pill px-3 py-2"><i
+                                        class="bi bi-exclamation-triangle-fill"></i> Burnout Risk</span>
                                 {% elif summary.burnout_risk == 'MEDIUM' %}
-                                <span class="badge bg-warning text-dark">MEDIUM</span>
+                                <span class="badge bg-warning text-dark rounded-pill px-3 py-2">Fatigue Warning</span>
                                 {% else %}
-                                <span class="badge bg-success">LOW</span>
+                                <span class="badge bg-success rounded-pill px-3 py-2"><i class="bi bi-shield-check"></i>
+                                    Healthy</span>
                                 {% endif %}
                             </td>
-                            <td><small class="text-muted">{{ summary.focus_pattern_notes }}</small></td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="7" class="text-center py-4">No analysis data available yet. Run the desktop
-                                agent and trigger the AI first!</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -113,33 +307,58 @@
         </div>
     </div>
 
-    <!-- Script to render the Chart -->
+    <!-- Scripts for Enterprise Charts -->
     <script>
-        // Parse the JSON data passed from Django views
         const labels = JSON.parse('{{ chart_labels|safe }}');
         const dataScores = JSON.parse('{{ chart_scores|safe }}');
 
-        const ctx = document.getElementById('productivityChart').getContext('2d');
-        const productivityChart = new Chart(ctx, {
+        // 1. Trend Bar Chart (Main)
+        const ctxTrend = document.getElementById('trendChart').getContext('2d');
+        new Chart(ctxTrend, {
             type: 'bar',
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'AI Productivity Score (/100)',
+                    label: 'Productivity Score',
                     data: dataScores,
-                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1,
-                    borderRadius: 5
+                    backgroundColor: '#3b82f6', // Professional Blue
+                    borderRadius: 4,
+                    barPercentage: 0.6
                 }]
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false, // Allows chart to stretch to container height
+                plugins: { legend: { display: false } },
                 scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100
-                    }
+                    y: { beginAtZero: true, max: 100, grid: { borderDash: [5, 5] } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        // 2. Time Split Doughnut Chart (Side)
+        const prodHours = parseFloat("{{ kpi_prod_hours|default:'0' }}".replace(',', '.'));
+        const idleHours = parseFloat("{{ kpi_idle_hours|default:'0' }}".replace(',', '.'));
+
+        const ctxDist = document.getElementById('distributionChart').getContext('2d');
+        new Chart(ctxDist, {
+            type: 'doughnut',
+            data: {
+                labels: ['Productive', 'Idle / Distracted'],
+                datasets: [{
+                    data: [prodHours, idleHours],
+                    backgroundColor: ['#10b981', '#ef4444'], // Green and Red
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false, // Forces chart to match the bar chart height
+                cutout: '70%',
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15 } }
                 }
             }
         });

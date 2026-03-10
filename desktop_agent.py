@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 BASE_URL = "http://127.0.0.1:8000/api/"
 API_URL_SESSIONS = f"{BASE_URL}sessions/"
 API_URL_ACTIVITIES = f"{BASE_URL}activities/"
-USER_ID = 1  
+USER_ID = 1  # <-- Changed from 2 to 1
 
 # --- NEW: ADVANCED TRACKING CONFIG ---
 IDLE_THRESHOLD_SECONDS = 60  # Mark as "Idle" after 60 seconds of no mouse/keyboard input
@@ -39,7 +39,7 @@ def get_active_window_title():
 
 def create_work_session():
     """Attempts to connect to the server. Retries every 5 seconds if offline."""
-    print("Connecting to server...")
+    print(f"Connecting to server for User ID: {USER_ID}...")
     data = {"user": USER_ID}
     
     while True:
@@ -50,7 +50,9 @@ def create_work_session():
                 print(f"✅ Connection Established! Session ID: {session_id}")
                 return session_id
             else:
-                print(f"⚠️ Server error ({response.status_code}). Retrying...")
+                # THIS LINE WILL REVEAL THE EXACT ERROR
+                print(f"⚠️ Server error ({response.status_code}): {response.text}")
+                print("Make sure USER_ID exists in the Django Admin panel!")
         except requests.exceptions.RequestException:
             print("❌ Server offline. Retrying in 5 seconds... (Please run 'python manage.py runserver')")
         
@@ -80,10 +82,13 @@ def send_activity_log(session_id, activity_name, start_time, end_time):
     }
     
     try:
-        requests.post(API_URL_ACTIVITIES, json=data, timeout=5)
-        print(f"Logged: {activity_name[:40]}... ({duration}s)")
+        response = requests.post(API_URL_ACTIVITIES, json=data, timeout=5)
+        if response.status_code == 201:
+            print(f"Logged: {activity_name[:40]}... ({duration}s)")
+        else:
+            print(f"⚠️ Failed to send log. Error: {response.text}")
     except Exception:
-        print(f"⚠️ Failed to send log. Check server connection.")
+        print(f"⚠️ Failed to connect to server to send log.")
 
 def main():
     print("--- AI Monitoring Agent (Press Ctrl+C to Exit) ---")
@@ -124,8 +129,11 @@ def main():
         # Trigger AI Analysis on exit
         try:
             print("Triggering AI Analysis...")
-            requests.post(f"{BASE_URL}analyze/", json={"user_id": USER_ID}, timeout=5)
-            print("📊 Analysis Complete. View dashboard for results.")
+            res = requests.post(f"{BASE_URL}analyze/", json={"user_id": USER_ID}, timeout=5)
+            if res.status_code == 200:
+                print("📊 Analysis Complete. View dashboard for results.")
+            else:
+                print(f"⚠️ AI Analysis Failed: {res.text}")
         except:
             pass
 

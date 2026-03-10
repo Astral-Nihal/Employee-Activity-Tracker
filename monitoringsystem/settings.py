@@ -124,4 +124,4 @@ STATIC_URL = 'static/'
 
 AUTH_USER_MODEL = 'tracker.User'
 
-LOGIN_REDIRECT_URL = '/api/dashboard/my-stats/'
+LOGIN_REDIRECT_URL = '/api/dashboard/route/'
