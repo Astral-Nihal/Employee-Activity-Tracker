@@ -1,95 +1,133 @@
-from .models import ActivityLog, DailySummary, User
 from django.utils import timezone
-import datetime
+from datetime import timedelta
+from django.contrib.auth import get_user_model
+from .models import ActivityLog, DailySummary
+
+User = get_user_model()
 
 def classify_activity(activity_name):
     """
-    Simulates an AI/NLP classification model using keyword heuristics.
-    Returns: (is_productive (Boolean), category (String))
+    Categorizes a window title based on a massive list of keywords.
     """
-    name_lower = str(activity_name).lower()
-    
-    # NLP Keywords mapped to categories
-    productive_keywords = ['code', 'visual studio', 'github', 'stackoverflow', 'excel', 'word', 'mail', 'meet', 'zoom', 'docs']
-    unproductive_keywords = ['youtube', 'facebook', 'instagram', 'netflix', 'game', 'whatsapp', 'twitter', 'tiktok']
-    
-    if any(keyword in name_lower for keyword in productive_keywords):
-        return True, 'Work/Productive'
-    elif any(keyword in name_lower for keyword in unproductive_keywords):
-        return False, 'Distraction/Social'
-    
-    return None, 'Neutral'
+    activity_lower = activity_name.lower()
 
-def run_daily_analysis(user_id, target_date=None):
-    """
-    Analyzes the user's activities for a specific day, calculates 
-    productivity scores, and detects burnout risk.
-    """
-    if target_date is None:
-        target_date = timezone.now().date()
+    # --- EXPANDED PRODUCTIVE KEYWORDS ---
+    productive_keywords = [
+        # AI, LLM & Agentic Tools
+        'chatgpt', 'gemini', 'claude', 'copilot', 'openai', 'perplexity', 
+        'midjourney', 'huggingface', 'anthropic', 'cursor', 'antigravity',
+        'devin', 'auto-gpt', 'langchain', 'crewai', 'autogen', 'babyagi',
         
-    try:
-        user = User.objects.get(id=user_id)
-    except User.DoesNotExist:
+        # Development & IT Tools
+        'code', 'vscode', 'visual studio', 'pycharm', 'intellij', 'eclipse', 
+        'github', 'gitlab', 'bitbucket', 'postman', 'docker', 'terminal', 
+        'powershell', 'cmd', 'stackoverflow', 'jira', 'confluence', 'sublime', 
+        'notepad++', 'android studio', 'xcode', 'aws', 'azure', 'linux', 'ubuntu',
+        
+        # Office & Collaboration
+        'word', 'excel', 'powerpoint', 'outlook', 'teams', 'slack', 'zoom', 
+        'meet', 'docs', 'sheets', 'slides', 'notion', 'trello', 'asana', 
+        'workspace', 'mail', 'calendar', 'drive', 'onedrive',
+        
+        # Design & Creative
+        'figma', 'photoshop', 'illustrator', 'premiere', 'after effects', 
+        'blender', 'canva', 'xd', 'lightroom', 'autocad', 'solidworks', 'unity', 'unreal'
+    ]
+
+    # --- EXPANDED UNPRODUCTIVE/DISTRACTING KEYWORDS ---
+    unproductive_keywords = [
+        # Entertainment & Streaming
+        'youtube', 'netflix', 'prime video', 'hulu', 'twitch', 'disney+', 
+        'hbo', 'spotify', 'apple music', 'movie', 'tv show',
+        
+        # Social Media & Chat
+        'facebook', 'twitter', 'x.com', 'instagram', 'tiktok', 'reddit', 
+        'snapchat', 'pinterest', 'whatsapp web', 'discord', 'telegram', 'messenger',
+        
+        # Gaming
+        'steam', 'epic games', 'riot', 'valorant', 'minecraft', 'roblox', 
+        'league of legends', 'cs:go', 'game', 'play', 'xbox', 'nintendo',
+        
+        # Shopping & Leisure
+        'amazon', 'ebay', 'aliexpress', 'flipkart', 'myntra', 'zomato', 'swiggy'
+    ]
+
+    # Check which category it falls into
+    if any(keyword in activity_lower for keyword in productive_keywords):
+        return 'PRODUCTIVE'
+    elif any(keyword in activity_lower for keyword in unproductive_keywords):
+        return 'UNPRODUCTIVE'
+    elif 'idle' in activity_lower:
+        return 'NEUTRAL'
+    else:
+        return 'NEUTRAL'
+
+def run_daily_analysis(user_id):
+    """
+    Analyzes today's logs for a user, calculates scores, and detects burnout risk.
+    """
+    user = User.objects.get(id=user_id)
+    today = timezone.now().date()
+    
+    # Get all logs for today
+    logs = ActivityLog.objects.filter(
+        user=user, 
+        start_time__date=today
+    )
+    
+    if not logs.exists():
         return None
 
-    # Fetch all logs for the given user and date
-    logs = ActivityLog.objects.filter(user=user, start_time__date=target_date)
-    
     total_seconds = 0
     productive_seconds = 0
     unproductive_seconds = 0
-    
-    # 1. Classify Data
-    for log in logs:
-        # If it hasn't been classified by AI yet
-        if log.is_productive is None and log.activity_type != 'IDLE':
-            is_prod, category = classify_activity(log.activity_name)
-            log.is_productive = is_prod
-            log.category = category
-            log.save()
-            
-        # Tally times
-        total_seconds += log.duration_seconds
-        if log.is_productive is True:
-            productive_seconds += log.duration_seconds
-        elif log.is_productive is False:
-            unproductive_seconds += log.duration_seconds
 
-    # 2. Calculate Hours
-    total_hours = total_seconds / 3600
-    prod_hours = productive_seconds / 3600
-    
-    # 3. Calculate Productivity Score (0-100)
-    score = 0.0
-    if total_hours > 0:
-        score = (prod_hours / total_hours) * 100
+    for log in logs:
+        # 1. First, classify the activity using our expanded dictionary
+        classification = classify_activity(log.activity_name)
         
-    # 4. Burnout Risk Detection (Simple Rule-based ML Simulation)
-    # E.g., Working more than 9 hours with dropping productivity = HIGH
+        # 2. Add up the time
+        duration = log.duration_seconds
+        total_seconds += duration
+        
+        if classification == 'PRODUCTIVE':
+            productive_seconds += duration
+        elif classification == 'UNPRODUCTIVE':
+            unproductive_seconds += duration
+
+    # 3. Calculate metrics
+    total_hours = total_seconds / 3600
+    productive_hours = productive_seconds / 3600
+    
+    if total_seconds > 0:
+        productivity_score = (productive_seconds / total_seconds) * 100
+    else:
+        productivity_score = 0
+
+    # 4. Burnout Detection Logic
     burnout_risk = 'LOW'
+    notes = "Work patterns are within normal operational limits."
+
     if total_hours > 10:
         burnout_risk = 'HIGH'
-    elif total_hours > 8 and score < 50:
+        notes = "CRITICAL: Employee exceeded 10 hours of active screen time. High risk of burnout."
+    elif total_hours > 8 and productivity_score < 40:
         burnout_risk = 'MEDIUM'
-        
-    # 5. Generate Smart Report Summary
-    summary, created = DailySummary.objects.get_or_create(
-        user=user, 
-        date=target_date,
-        defaults={'total_working_hours': 0, 'productive_hours': 0, 'productivity_score': 0}
+        notes = "WARNING: Long hours detected with low productivity. Potential fatigue."
+    elif productivity_score > 85:
+        notes = "Excellent focus and high productivity today."
+
+    # 5. Save the summary to the database
+    summary, created = DailySummary.objects.update_or_create(
+        user=user,
+        date=today,
+        defaults={
+            'total_working_hours': round(total_hours, 2),
+            'productive_hours': round(productive_hours, 2),
+            'productivity_score': round(productivity_score, 2),
+            'burnout_risk': burnout_risk,
+            'focus_pattern_notes': notes
+        }
     )
-    
-    summary.total_working_hours = round(total_hours, 2)
-    summary.productive_hours = round(prod_hours, 2)
-    summary.productivity_score = round(score, 2)
-    summary.burnout_risk = burnout_risk
-    
-    if burnout_risk == 'HIGH':
-        summary.focus_pattern_notes = "Warning: Employee is working excessive hours. High risk of burnout."
-    else:
-        summary.focus_pattern_notes = "Work patterns are within normal operational limits."
-        
-    summary.save()
     
     return summary

@@ -4,10 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Workspace - WorkAnalytics OS</title>
+    <title>Advanced Reports - WorkAnalytics OS</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             background-color: #f4f7f6;
@@ -15,7 +14,6 @@
             overflow-x: hidden;
         }
 
-        /* ProHance Style Sidebar with Login Gradient */
         .sidebar {
             height: 100vh;
             background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%);
@@ -53,7 +51,6 @@
             color: #fff;
         }
 
-        /* Main Content Area */
         .main-content {
             margin-left: 250px;
             padding: 20px 30px;
@@ -70,16 +67,6 @@
             align-items: center;
         }
 
-        /* Data Tables & Charts */
-        .chart-container {
-            background: white;
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
-            border: 1px solid #e2e8f0;
-            margin-bottom: 25px;
-        }
-
         .table-container {
             background: white;
             border-radius: 12px;
@@ -88,7 +75,6 @@
             border: 1px solid #e2e8f0;
         }
 
-        /* ProHance Badges */
         .badge-prohance-high {
             background-color: #dcfce7;
             color: #166534;
@@ -122,8 +108,11 @@
         <div class="sidebar-brand">
             <i class="bi bi-layers-fill text-info"></i> WorkAnalytics OS
         </div>
-        <a href="#" class="active"><i class="bi bi-person-bounding-box me-2"></i> My Personal Stats</a>
-        <a href="{% url 'export-my-report' %}"><i class="bi bi-cloud-download me-2"></i> Export My Data</a>
+        <a href="{% url 'hr-dashboard' %}"><i class="bi bi-grid-1x2-fill me-2"></i> Executive Dashboard</a>
+        <a href="{% url 'workforce-activity' %}"><i class="bi bi-people-fill me-2"></i> Workforce Activity</a>
+        <a href="{% url 'time-distribution' %}"><i class="bi bi-clock-history me-2"></i> Time Distribution</a>
+        <a href="{% url 'advanced-reports' %}" class="active"><i class="bi bi-file-earmark-bar-graph-fill me-2"></i>
+            Advanced Reports</a>
         <hr class="border-light opacity-25 mx-3">
         <a href="{% url 'logout' %}"><i class="bi bi-box-arrow-left me-2"></i> Sign Out</a>
     </div>
@@ -133,44 +122,38 @@
 
         <!-- Topbar -->
         <div class="topbar">
-            <h4 class="mb-0 text-secondary">My Workspace</h4>
+            <div>
+                <h4 class="mb-0 text-secondary">Advanced Analytics Reports</h4>
+                <small class="text-muted">Total Activity Points Tracked: {{ total_logs }} | Database Sessions:
+                    {{total_sessions}}</small>
+            </div>
             <div class="d-flex align-items-center">
-                <span class="me-3 text-muted"><i class="bi bi-calendar3"></i> Today</span>
+                <!-- GLOBAL EXPORT BUTTON -->
+                <a href="{% url 'export-global-report' %}" class="btn btn-primary rounded-pill px-4 me-3 shadow-sm">
+                    <i class="bi bi-cloud-arrow-down-fill me-2"></i> Export Global CSV
+                </a>
                 <div class="dropdown">
                     <button class="btn btn-light rounded-pill px-4 border" type="button">
-                        <i class="bi bi-person-circle text-primary"></i> {{ request.user.username }} (Employee)
+                        <i class="bi bi-person-circle text-primary"></i> {{ request.user.username }} (Admin)
                     </button>
                 </div>
             </div>
         </div>
 
-        <div class="mb-4">
-            <h5 class="text-secondary mb-0">Personal Productivity Trend (Last 7 Days)</h5>
-        </div>
-
-        <!-- Chart Row -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="chart-container">
-                    <div style="position: relative; height: 300px; width: 100%;">
-                        <canvas id="myChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Data Table -->
+        <!-- Master Data Table -->
         <div class="table-container">
-            <h5 class="text-secondary mb-4">My Detailed Work Logs</h5>
+            <h5 class="text-secondary mb-4"><i class="bi bi-archive-fill text-secondary me-2"></i> Historical Master
+                Data</h5>
             <div class="table-responsive">
                 <table class="table table-borderless table-hover align-middle">
                     <thead class="border-bottom text-muted" style="font-size: 0.9rem;">
                         <tr>
                             <th>DATE</th>
+                            <th>EMPLOYEE</th>
                             <th>TOTAL TIME</th>
                             <th>PRODUCTIVE TIME</th>
                             <th>AI SCORE</th>
-                            <th>FEEDBACK / NOTES</th>
+                            <th>HEALTH FLAG</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -178,23 +161,31 @@
                         <tr class="border-bottom">
                             <td><span class="text-muted"><i
                                         class="bi bi-calendar-event me-1"></i>{{summary.date}}</span></td>
-                            <td>{{summary.total_working_hours}}h</td>
-                            <td>{{summary.productive_hours}}h</td>
+                            <td class="fw-bold text-dark"><i
+                                    class="bi bi-person-badge text-primary me-2"></i>{{summary.user.username}}</td>
+                            <td>{{ summary.total_working_hours }}h</td>
+                            <td>{{ summary.productive_hours }}h</td>
                             <td>
                                 <span
                                     class="{% if summary.productivity_score >= 70 %} badge-prohance-high {% elif summary.productivity_score >= 40 %} badge-prohance-med {% else %} badge-prohance-low {% endif %}">
-                                    {{summary.productivity_score}}%
+                                    {{ summary.productivity_score }}%
                                 </span>
                             </td>
-                            <td><small class="text-muted"><i
-                                        class="bi bi-info-circle me-1"></i>{{summary.focus_pattern_notes}}</small></td>
+                            <td>
+                                {% if summary.burnout_risk == 'HIGH' %}
+                                <span class="badge bg-danger rounded-pill px-3 py-2"><i
+                                        class="bi bi-exclamation-triangle-fill"></i> Burnout Risk</span>
+                                {% elif summary.burnout_risk == 'MEDIUM' %}
+                                <span class="badge bg-warning text-dark rounded-pill px-3 py-2">Fatigue Warning</span>
+                                {% else %}
+                                <span class="badge bg-success rounded-pill px-3 py-2"><i class="bi bi-shield-check"></i>
+                                    Healthy</span>
+                                {% endif %}
+                            </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="5" class="text-center py-5 text-muted">
-                                <i class="bi bi-inbox fs-1 d-block mb-3"></i>
-                                No data logged yet. Ensure your desktop agent is running!
-                            </td>
+                            <td colspan="6" class="text-center py-5 text-muted">No historical data found.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -202,51 +193,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Script for Line Chart -->
-    <script>
-        const labels = JSON.parse('{{ chart_labels|safe }}');
-        const dataScores = JSON.parse('{{ chart_scores|safe }}');
-
-        const ctx = document.getElementById('myChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Productivity Score (%)',
-                    data: dataScores,
-                    borderColor: '#3b82f6', // Consistent Enterprise Blue
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    borderWidth: 3,
-                    pointBackgroundColor: '#ffffff',
-                    pointBorderColor: '#3b82f6',
-                    pointBorderWidth: 2,
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
-                    fill: true,
-                    tension: 0.4 // Smooth curves
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100,
-                        grid: { borderDash: [5, 5], color: '#e2e8f0' }
-                    },
-                    x: {
-                        grid: { display: false }
-                    }
-                }
-            }
-        });
-    </script>
 </body>
 
 </html>

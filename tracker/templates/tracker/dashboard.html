@@ -15,10 +15,10 @@
             overflow-x: hidden;
         }
 
-        /* ProHance Style Sidebar */
+        /* ProHance Style Sidebar with Login Gradient */
         .sidebar {
             height: 100vh;
-            background-color: #1e293b;
+            background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%);
             color: white;
             position: fixed;
             width: 250px;
@@ -34,13 +34,14 @@
             display: block;
             transition: 0.3s;
             font-weight: 500;
+            border-left: 4px solid transparent;
         }
 
         .sidebar a:hover,
         .sidebar a.active {
-            background-color: #334155;
+            background-color: rgba(255, 255, 255, 0.15);
             color: white;
-            border-left: 4px solid #3b82f6;
+            border-left: 4px solid #ffffff;
         }
 
         .sidebar-brand {
@@ -165,13 +166,15 @@
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="sidebar-brand">
-            <i class="bi bi-layers-fill text-primary"></i> WorkAnalytics OS
+            <i class="bi bi-layers-fill text-info"></i> WorkAnalytics OS
         </div>
-        <a href="#" class="active"><i class="bi bi-grid-1x2-fill me-2"></i> Executive Dashboard</a>
-        <a href="#"><i class="bi bi-people-fill me-2"></i> Workforce Activity</a>
-        <a href="#"><i class="bi bi-clock-history me-2"></i> Time Distribution</a>
-        <a href="#"><i class="bi bi-file-earmark-bar-graph-fill me-2"></i> Advanced Reports</a>
-        <hr class="border-secondary mx-3">
+        <a href="{% url 'hr-dashboard' %}" class="active"><i class="bi bi-grid-1x2-fill me-2"></i> Executive
+            Dashboard</a>
+        <a href="{% url 'workforce-activity' %}"><i class="bi bi-people-fill me-2"></i> Workforce Activity</a>
+        <a href="{% url 'time-distribution' %}"><i class="bi bi-clock-history me-2"></i> Time Distribution</a>
+        <a href="{% url 'advanced-reports' %}"><i class="bi bi-file-earmark-bar-graph-fill me-2"></i> Advanced
+            Reports</a>
+        <hr class="border-light opacity-25 mx-3">
         <a href="{% url 'logout' %}"><i class="bi bi-box-arrow-left me-2"></i> Sign Out</a>
     </div>
 
@@ -278,14 +281,15 @@
                     <tbody>
                         {% for summary in summaries %}
                         <tr class="border-bottom">
-                            <td><span class="text-muted"><i class="bi bi-calendar-event me-1"></i>{{summary.date}}</span></td>
-                            <td class="fw-bold text-dark">{{ summary.user.username }}</td>
-                            <td>{{ summary.total_working_hours }}h</td>
-                            <td>{{ summary.productive_hours }}h</td>
+                            <td><span class="text-muted"><i
+                                        class="bi bi-calendar-event me-1"></i>{{summary.date}}</span></td>
+                            <td class="fw-bold text-dark">{{summary.user.username}}</td>
+                            <td>{{summary.total_working_hours}}h</td>
+                            <td>{{summary.productive_hours}}h</td>
                             <td>
                                 <span
                                     class="{% if summary.productivity_score >= 70 %} badge-prohance-high {% elif summary.productivity_score >= 40 %} badge-prohance-med {% else %} badge-prohance-low {% endif %}">
-                                    {{ summary.productivity_score }}%
+                                    {{summary.productivity_score}}%
                                 </span>
                             </td>
                             <td>
