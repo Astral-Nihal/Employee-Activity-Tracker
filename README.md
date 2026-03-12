@@ -21,14 +21,20 @@ The system utilizes an AI engine to classify activities, generate daily producti
 
 ## Installation and Setup
 
-### 1. Navigate to the Project
-Open your terminal or command prompt and navigate to the project root directory:
+### 1. Clone the Repository
+Open your terminal or command prompt and clone the repository, then navigate into the directory:
 ```bash
+git clone https://github.com/Astral-Nihal/Employee-Activity-Tracker.git
 cd "Employee Activity Tracker"
 ```
 
-### 2. Activate the Virtual Environment
-The project already includes a virtual environment named `venv`.
+### 2. Create and Activate the Virtual Environment
+Create a new virtual environment to manage dependencies:
+```bash
+python -m venv venv
+```
+
+To activate the virtual environment:
 
 **On Windows:**
 ```bash
@@ -41,7 +47,7 @@ source venv/bin/activate
 ```
 
 ### 3. Install Dependencies
-Install all necessary packages. (Ensure you have `django` and `djangorestframework` at a minimum). If a `requirements.txt` file is present in the project, run:
+Install all necessary packages, including `django`, `djangorestframework`, and other requirements by running:
 ```bash
 pip install -r requirements.txt
 ```
