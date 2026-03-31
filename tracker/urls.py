@@ -7,6 +7,8 @@ from .views import (
     ActivityLogViewSet, WorkSessionViewSet, trigger_ai_analysis,
     # Task 1: Agent auth endpoints
     agent_login, agent_logout,
+    # Task 1: Web-triggered tracking
+    toggle_tracking, tracking_status_poll, session_summary_poll,
     # Existing HR dashboards
     hr_dashboard, workforce_activity, time_distribution, advanced_reports,
     # Task 3: Employee Management CRUD
@@ -28,6 +30,11 @@ urlpatterns = [
     # ----- Task 1: Desktop Agent Auth -----
     path('agent-login/', agent_login, name='agent-login'),
     path('agent-logout/', agent_logout, name='agent-logout'),
+
+    # ----- Task 1: Web-Triggered Tracking -----
+    path('toggle-tracking/', toggle_tracking, name='toggle-tracking'),
+    path('tracking-status/', tracking_status_poll, name='tracking-status'),
+    path('session-summary/', session_summary_poll, name='session-summary'),
 
     # ----- HR Dashboards -----
     path('dashboard/route/', dashboard_redirect, name='dashboard-route'),

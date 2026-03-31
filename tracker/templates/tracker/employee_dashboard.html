@@ -15,7 +15,7 @@
             overflow-x: hidden;
         }
 
-        /* ProHance Style Sidebar with Login Gradient */
+        /* ── Sidebar ── */
         .sidebar {
             height: 100vh;
             background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%);
@@ -53,7 +53,7 @@
             color: #fff;
         }
 
-        /* Main Content Area */
+        /* ── Main Content ── */
         .main-content {
             margin-left: 250px;
             padding: 20px 30px;
@@ -70,7 +70,7 @@
             align-items: center;
         }
 
-        /* Data Tables & Charts */
+        /* ── Charts & Tables ── */
         .chart-container {
             background: white;
             border-radius: 12px;
@@ -88,7 +88,7 @@
             border: 1px solid #e2e8f0;
         }
 
-        /* ProHance Badges */
+        /* ── ProHance Badges ── */
         .badge-prohance-high {
             background-color: #dcfce7;
             color: #166534;
@@ -112,12 +112,156 @@
             border-radius: 20px;
             font-weight: 600;
         }
+
+        /* ── Live Recording Pill in Topbar ── */
+        .live-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+            border: 1.5px solid #10b981;
+            color: #065f46;
+            border-radius: 30px;
+            padding: 6px 16px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+        }
+
+        .live-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background-color: #10b981;
+            flex-shrink: 0;
+            animation: pulse-green 1.5s infinite;
+        }
+
+        @keyframes pulse-green {
+            0%   { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
+            70%  { box-shadow: 0 0 0 7px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        /* ── Welcome Toast (top-right) ── */
+        #welcomeToast {
+            position: fixed;
+            top: 20px;
+            right: 24px;
+            z-index: 9000;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            color: white;
+            border-radius: 14px;
+            padding: 16px 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.22);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.88rem;
+            max-width: 340px;
+            animation: slideInRight 0.4s ease;
+        }
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(40px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes slideOutRight {
+            from { opacity: 1; transform: translateX(0); }
+            to   { opacity: 0; transform: translateX(40px); }
+        }
+        #welcomeToast.hiding { animation: slideOutRight 0.3s ease forwards; }
+
+        /* ── Modal Overlay (shared by both modals) ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(4px);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+
+        .modal-card {
+            background: white;
+            border-radius: 24px;
+            padding: 36px;
+            max-width: 460px;
+            width: 90%;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+            animation: popIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+            position: relative;
+        }
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.85); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-close-btn {
+            position: absolute;
+            top: 16px; right: 20px;
+            background: none;
+            border: none;
+            font-size: 1.4rem;
+            color: #94a3b8;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .modal-close-btn:hover { color: #1e293b; }
+
+        /* ── Session Summary Modal Elements ── */
+        .score-circle {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            border: 6px solid;
+            font-weight: 800;
+        }
+        .score-circle .score-num { font-size: 2rem; line-height: 1; }
+        .score-circle .score-unit { font-size: 0.8rem; opacity: 0.7; }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.9rem;
+        }
+        .stat-row:last-of-type { border-bottom: none; }
+        .stat-label { color: #64748b; }
+        .stat-value { font-weight: 600; color: #1e293b; }
+
+        .burnout-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .modal-loading {
+            text-align: center;
+            padding: 16px 0;
+        }
     </style>
 </head>
 
 <body>
+    <!-- CSRF token cookie trigger -->
+    <div style="display: none;">{% csrf_token %}</div>
 
-    <!-- Sidebar -->
+    <!-- ================================================================ -->
+    <!-- SIDEBAR                                                           -->
+    <!-- ================================================================ -->
     <div class="sidebar">
         <div class="sidebar-brand">
             <i class="bi bi-layers-fill text-info"></i> WorkAnalytics OS
@@ -125,18 +269,30 @@
         <a href="#" class="active"><i class="bi bi-person-bounding-box me-2"></i> My Personal Stats</a>
         <a href="{% url 'export-my-report' %}"><i class="bi bi-cloud-download me-2"></i> Export My Data</a>
         <hr class="border-light opacity-25 mx-3">
-        <a href="{% url 'logout' %}"><i class="bi bi-box-arrow-left me-2"></i> Sign Out</a>
+        <!-- Sign Out intercepts to show confirmation modal -->
+        <a href="{% url 'logout' %}" id="signOutLink" onclick="showSignOutConfirm(event)">
+            <i class="bi bi-box-arrow-left me-2"></i> Sign Out
+        </a>
     </div>
 
-    <!-- Main Content -->
+    <!-- ================================================================ -->
+    <!-- MAIN CONTENT                                                      -->
+    <!-- ================================================================ -->
     <div class="main-content">
 
-        <!-- Topbar -->
+        <!-- Topbar with Live Pill -->
         <div class="topbar">
             <h4 class="mb-0 text-secondary">My Workspace</h4>
-            <div class="d-flex align-items-center">
-                <span class="me-3 text-muted"><i class="bi bi-calendar3"></i> Today</span>
-                <div class="dropdown">
+            <div class="d-flex align-items-center gap-3">
+                <!-- Always-visible Live Recording indicator -->
+                <span class="live-pill">
+                    <span class="live-dot"></span>
+                    Tracking
+                </span>
+                <span class="text-muted" style="font-size:0.85rem;">
+                    <i class="bi bi-calendar3 me-1"></i> Today
+                </span>
+                <div>
                     <button class="btn btn-light rounded-pill px-4 border" type="button">
                         <i class="bi bi-person-circle text-primary"></i> {{ request.user.username }} (Employee)
                     </button>
@@ -144,6 +300,7 @@
             </div>
         </div>
 
+        <!-- Personal Productivity Trend -->
         <div class="mb-4">
             <h5 class="text-secondary mb-0">Personal Productivity Trend (Last 7 Days)</h5>
         </div>
@@ -181,8 +338,7 @@
                             <td>{{summary.total_working_hours}}h</td>
                             <td>{{summary.productive_hours}}h</td>
                             <td>
-                                <span
-                                    class="{% if summary.productivity_score >= 70 %} badge-prohance-high {% elif summary.productivity_score >= 40 %} badge-prohance-med {% else %} badge-prohance-low {% endif %}">
+                                <span class="{% if summary.productivity_score >= 70 %}badge-prohance-high{% elif summary.productivity_score >= 40 %}badge-prohance-med{% else %}badge-prohance-low{% endif %}">
                                     {{summary.productivity_score}}%
                                 </span>
                             </td>
@@ -193,7 +349,7 @@
                         <tr>
                             <td colspan="5" class="text-center py-5 text-muted">
                                 <i class="bi bi-inbox fs-1 d-block mb-3"></i>
-                                No data logged yet. Ensure your desktop agent is running!
+                                No data logged yet — your session is being recorded. Check back after signing out!
                             </td>
                         </tr>
                         {% endfor %}
@@ -203,20 +359,27 @@
         </div>
     </div>
 
-    <!-- Script for Line Chart -->
-    <script>
-        const labels = JSON.parse('{{ chart_labels|safe }}');
-        const dataScores = JSON.parse('{{ chart_scores|safe }}');
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-        const ctx = document.getElementById('myChart').getContext('2d');
-        new Chart(ctx, {
+    <!-- ================================================================ -->
+    <!-- CHART JAVASCRIPT                                                  -->
+    <!-- ================================================================ -->
+    <script id="chart-labels-data" type="application/json">{{ chart_labels|safe }}</script>
+    <script id="chart-scores-data" type="application/json">{{ chart_scores|safe }}</script>
+
+    <script>
+        const labels     = JSON.parse(document.getElementById('chart-labels-data').textContent);
+        const dataScores = JSON.parse(document.getElementById('chart-scores-data').textContent);
+
+        new Chart(document.getElementById('myChart').getContext('2d'), {
             type: 'line',
             data: {
-                labels: labels,
+                labels,
                 datasets: [{
                     label: 'Productivity Score (%)',
                     data: dataScores,
-                    borderColor: '#3b82f6', // Consistent Enterprise Blue
+                    borderColor: '#3b82f6',
                     backgroundColor: 'rgba(59, 130, 246, 0.1)',
                     borderWidth: 3,
                     pointBackgroundColor: '#ffffff',
@@ -225,28 +388,173 @@
                     pointRadius: 4,
                     pointHoverRadius: 6,
                     fill: true,
-                    tension: 0.4 // Smooth curves
+                    tension: 0.4
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
+                plugins: { legend: { display: false } },
                 scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100,
-                        grid: { borderDash: [5, 5], color: '#e2e8f0' }
-                    },
-                    x: {
-                        grid: { display: false }
-                    }
+                    y: { beginAtZero: true, max: 100, grid: { borderDash: [5, 5], color: '#e2e8f0' } },
+                    x: { grid: { display: false } }
                 }
             }
         });
     </script>
-</body>
 
+    <!-- ================================================================ -->
+    <!-- AGENT HANDSHAKE + SIGN-OUT LOGIC                                 -->
+    <!-- ================================================================ -->
+    <script>
+        const AGENT_WAKEUP_URL = "http://127.0.0.1:9443/agent/start";
+        const AGENT_SLEEP_URL  = "http://127.0.0.1:9443/agent/stop";
+        const USER_ID          = "{{ user_id }}";
+        const AUTH_TOKEN       = "{{ auth_token }}";
+        const LOGOUT_URL       = "{% url 'logout' %}";
+
+        // ─── On page load ─────────────────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // 1. Wake the desktop agent
+            if (USER_ID && AUTH_TOKEN) {
+                fetch(AGENT_WAKEUP_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: USER_ID, token: AUTH_TOKEN })
+                }).catch(() => {});
+            }
+
+            // 2. Ensure tracking is ON server-side (view auto-starts it,
+            //    but call toggle if the context says it wasn't already running)
+            const wasAlreadyTracking = ("{{ is_tracking|yesno:'true,false' }}" === "true");
+            if (!wasAlreadyTracking) {
+                fetch('/api/toggle-tracking/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                    credentials: 'same-origin',
+                }).catch(() => {});
+            }
+
+            // 3. Show welcome toast
+            showWelcomeToast();
+        });
+
+        // ─── Welcome Toast ────────────────────────────────────────────────
+        function showWelcomeToast() {
+            const t = document.getElementById('welcomeToast');
+            t.style.display = 'flex';
+            setTimeout(() => {
+                t.classList.add('hiding');
+                setTimeout(() => { t.style.display = 'none'; }, 320);
+            }, 4500);
+        }
+
+        // ─── Sign-Out Confirmation ─────────────────────────────────────────
+        function showSignOutConfirm(event) {
+            event.preventDefault();
+            document.getElementById('signOutModal').classList.add('open');
+        }
+
+        function cancelSignOut() {
+            document.getElementById('signOutModal').classList.remove('open');
+        }
+
+        function confirmSignOut() {
+            // Show saving state inside the modal
+            document.getElementById('signOutModalBody').innerHTML = `
+                <div class="modal-loading">
+                    <div class="spinner-border text-danger mb-3" style="width:2.5rem;height:2.5rem;"></div>
+                    <div class="fw-bold text-dark">Stopping tracking & saving your session...</div>
+                    <div class="text-muted mt-2" style="font-size:0.84rem;">Please wait a moment.</div>
+                </div>
+            `;
+            document.getElementById('signOutActions').style.display = 'none';
+
+            // Step 1: Stop tracking (kicks off background score computation)
+            fetch('/api/toggle-tracking/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                credentials: 'same-origin',
+            })
+            .catch(() => ({}))
+            .finally(() => {
+                // Step 2: Put the desktop agent to sleep
+                fetch(AGENT_SLEEP_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                }).catch(() => {}).finally(() => {
+                    // Step 3: Navigate to Django logout
+                    window.location.href = LOGOUT_URL;
+                });
+            });
+        }
+
+        // ─── CSRF cookie helper ───────────────────────────────────────────
+        function getCookie(name) {
+            for (let c of document.cookie.split(';')) {
+                const [k, v] = c.trim().split('=');
+                if (k === name) return decodeURIComponent(v);
+            }
+            return null;
+        }
+    </script>
+
+    <!-- ================================================================ -->
+    <!-- WELCOME TOAST (top-right notification on login)                  -->
+    <!-- ================================================================ -->
+    <div id="welcomeToast" style="display:none;">
+        <span style="font-size:1.5rem; line-height:1;">🟢</span>
+        <div>
+            <div style="font-weight:700;margin-bottom:3px;">Tracking Started</div>
+            <div style="color:#94a3b8;font-size:0.8rem;line-height:1.4;">
+                Your activity is now being recorded. Have a productive session!
+            </div>
+        </div>
+        <button onclick="this.parentElement.style.display='none'"
+            style="background:none;border:none;color:#64748b;font-size:1.1rem;cursor:pointer;margin-left:6px;flex-shrink:0;">&#x2715;</button>
+    </div>
+
+    <!-- ================================================================ -->
+    <!-- SIGN-OUT CONFIRMATION MODAL                                       -->
+    <!-- ================================================================ -->
+    <div id="signOutModal" class="modal-overlay" onclick="if(event.target===this) cancelSignOut();">
+        <div class="modal-card">
+            <button class="modal-close-btn" onclick="cancelSignOut()">&#x2715;</button>
+
+            <div style="text-align:center;margin-bottom:22px;">
+                <div style="font-size:2.2rem;margin-bottom:10px;">👋</div>
+                <div style="font-weight:700;font-size:1.2rem;color:#1e293b;">Sign Out?</div>
+            </div>
+
+            <div id="signOutModalBody">
+                <!-- Warning banner -->
+                <div style="background:#fef3c7;border:1.5px solid #fbbf24;border-radius:12px;padding:14px 18px;margin-bottom:18px;display:flex;gap:12px;align-items:flex-start;">
+                    <span style="font-size:1.2rem;flex-shrink:0;">⚠️</span>
+                    <div style="font-size:0.87rem;color:#78350f;line-height:1.55;">
+                        <strong>Your tracking session will be stopped.</strong><br>
+                        Your productivity score for this session will be calculated and saved before you are logged out.
+                    </div>
+                </div>
+                <p style="font-size:0.9rem;color:#475569;margin:0;">Are you sure you want to sign out?</p>
+            </div>
+
+            <div id="signOutActions" style="display:flex;gap:10px;margin-top:24px;">
+                <button class="btn btn-outline-secondary rounded-pill flex-fill" onclick="cancelSignOut()">
+                    Stay Logged In
+                </button>
+                <button class="btn btn-danger rounded-pill flex-fill fw-semibold" onclick="confirmSignOut()">
+                    <i class="bi bi-box-arrow-right me-1"></i> Yes, Sign Out
+                </button>
+            </div>
+        </div>
+    </div>
+
+</body>
 </html>

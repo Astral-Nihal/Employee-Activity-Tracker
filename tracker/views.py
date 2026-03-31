@@ -1,5 +1,6 @@
 from rest_framework import viewsets
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from django.shortcuts import render, redirect, get_object_or_404
@@ -9,12 +10,13 @@ from django.db.models import Sum, Avg
 from django.utils import timezone
 from django.contrib import messages
 import json
+import threading
 import csv
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import ActivityLog, WorkSession, DailySummary, User
-from .serializers import ActivityLogSerializer, WorkSessionSerializer
+from .models import ActivityLog, WorkSession, DailySummary, User, TrackingStatus
+from .serializers import ActivityLogSerializer, WorkSessionSerializer, TrackingStatusSerializer
 from .backend_engine import run_daily_analysis, classify_activity
 
 
@@ -24,10 +26,12 @@ from .backend_engine import run_daily_analysis, classify_activity
 class WorkSessionViewSet(viewsets.ModelViewSet):
     queryset = WorkSession.objects.all()
     serializer_class = WorkSessionSerializer
+    permission_classes = [IsAuthenticated]
 
 class ActivityLogViewSet(viewsets.ModelViewSet):
     queryset = ActivityLog.objects.all()
     serializer_class = ActivityLogSerializer
+    permission_classes = [IsAuthenticated]
 
 @api_view(['POST'])
 def trigger_ai_analysis(request):
@@ -75,6 +79,117 @@ def agent_login(request):
         "username": user.username,
         "role": user.role,
     }, status=200)
+
+
+# ===========================================================================
+# TASK 1: Web-Triggered Tracking — Toggle & Poll Endpoints
+# ===========================================================================
+
+# In-memory store: user_id -> session summary dict (cleared after retrieval)
+_pending_summaries = {}
+_pending_lock = threading.Lock()
+
+
+def _delayed_analysis(user_id, delay_seconds=10):
+    """
+    Runs in a background thread after the agent has had time to flush
+    its last activity window (one full poll cycle = ~7-10 s).
+    Stores the result in _pending_summaries so the browser can retrieve it.
+    """
+    import time as _time
+    _time.sleep(delay_seconds)
+    try:
+        from django import db
+        db.close_old_connections()   # Required — threads have their own DB connections
+        summary = run_daily_analysis(user_id)
+        if summary:
+            with _pending_lock:
+                _pending_summaries[user_id] = {
+                    'productivity_score': summary.productivity_score,
+                    'total_working_hours': summary.total_working_hours,
+                    'productive_hours': summary.productive_hours,
+                    'burnout_risk': summary.burnout_risk,
+                    'focus_pattern_notes': summary.focus_pattern_notes,
+                    'date': str(summary.date),
+                    'ready': True,
+                }
+    except Exception:
+        pass
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def toggle_tracking(request):
+    """
+    Flips the tracking toggle for the logged-in employee.
+
+    On STOP (True → False):
+      1. Sets is_tracking=False immediately so the desktop agent detects it
+         on its next poll (within ~7 s) and flushes the current window log.
+      2. Launches a background thread that waits 10 s (one full poll cycle)
+         then runs run_daily_analysis() and stores the result.
+      3. Returns is_tracking=False + pending=True so the browser knows to poll
+         /api/session-summary/ until the result is ready.
+    """
+    status_obj, _ = TrackingStatus.objects.get_or_create(user=request.user)
+    was_tracking = status_obj.is_tracking
+    status_obj.is_tracking = not status_obj.is_tracking
+    status_obj.save()
+
+    response_data = {
+        'is_tracking': status_obj.is_tracking,
+        'username': request.user.username,
+    }
+
+    if was_tracking and not status_obj.is_tracking:
+        # Clear any stale pending result for this user
+        with _pending_lock:
+            _pending_summaries.pop(request.user.id, None)
+
+        # Kick off background analysis (waits for agent to flush last window)
+        t = threading.Thread(
+            target=_delayed_analysis,
+            args=(request.user.id, 10),
+            daemon=True,
+        )
+        t.start()
+        response_data['pending_summary'] = True
+
+    return Response(response_data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def session_summary_poll(request):
+    """
+    The browser polls this endpoint every 2 s after stopping tracking.
+    Returns the computed summary once it's ready, then clears it.
+    """
+    with _pending_lock:
+        result = _pending_summaries.get(request.user.id)
+        if result and result.get('ready'):
+            del _pending_summaries[request.user.id]
+            return Response({'ready': True, 'session_summary': result})
+
+    return Response({'ready': False})
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def tracking_status_poll(request):
+    """
+    Polled every 5-10 seconds by the desktop agent to decide whether
+    to log activity or sleep.
+
+    The agent authenticates with its token header, so this endpoint
+    never exposes session data to cross-origin requests.
+    """
+    status_obj, _ = TrackingStatus.objects.get_or_create(user=request.user)
+    return Response({
+        'is_tracking': status_obj.is_tracking,
+        'user_id': request.user.pk,
+        'username': request.user.username,
+    })
 
 
 @csrf_exempt
@@ -227,10 +342,27 @@ def employee_dashboard(request):
     chart_scores = [s.productivity_score for s in summaries[:7]]
     chart_labels.reverse()
     chart_scores.reverse()
+
+    # Auto-start tracking whenever the employee opens their dashboard.
+    # This means tracking is always ON when they are logged in — no button needed.
+    tracking_obj, _ = TrackingStatus.objects.get_or_create(user=request.user)
+    was_already_tracking = tracking_obj.is_tracking
+    if not tracking_obj.is_tracking:
+        tracking_obj.is_tracking = True
+        tracking_obj.save()
+
+    # Pass auth token to template for desktop agent wakeup
+    token, _ = Token.objects.get_or_create(user=request.user)
+
     return render(request, 'tracker/employee_dashboard.html', {
         'summaries': summaries,
         'chart_labels': json.dumps(chart_labels),
         'chart_scores': json.dumps(chart_scores),
+        # Tell the template whether tracking was already running before this load
+        # (so the JS knows whether to POST toggle-tracking on load or not)
+        'is_tracking': was_already_tracking,
+        'auth_token': token.key,
+        'user_id': request.user.id,
     })
 
 

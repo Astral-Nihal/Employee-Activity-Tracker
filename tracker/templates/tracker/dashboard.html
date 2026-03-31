@@ -313,9 +313,12 @@
     </div>
 
     <!-- Scripts for Enterprise Charts -->
+    <script id="chart-labels-data" type="application/json">{{ chart_labels|safe }}</script>
+    <script id="chart-scores-data" type="application/json">{{ chart_scores|safe }}</script>
+
     <script>
-        const labels = JSON.parse('{{ chart_labels|safe }}');
-        const dataScores = JSON.parse('{{ chart_scores|safe }}');
+        const labels = JSON.parse(document.getElementById('chart-labels-data').textContent);
+        const dataScores = JSON.parse(document.getElementById('chart-scores-data').textContent);
 
         // 1. Trend Bar Chart (Main)
         const ctxTrend = document.getElementById('trendChart').getContext('2d');

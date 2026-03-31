@@ -182,13 +182,18 @@
     </div>
 
     <!-- Chart Scripts -->
-    <script>
-        // Parse data passed from views.py
-        const catLabels = JSON.parse('{{ cat_labels|safe }}');
-        const catData = JSON.parse('{{ cat_data|safe }}');
+    <script id="cat-labels-data" type="application/json">{{ cat_labels|safe }}</script>
+    <script id="cat-data-data" type="application/json">{{ cat_data|safe }}</script>
+    <script id="app-labels-data" type="application/json">{{ app_labels|safe }}</script>
+    <script id="app-data-data" type="application/json">{{ app_data|safe }}</script>
 
-        const appLabels = JSON.parse('{{ app_labels|safe }}');
-        const appData = JSON.parse('{{ app_data|safe }}');
+    <script>
+        // Parse data safely from script tags
+        const catLabels = JSON.parse(document.getElementById('cat-labels-data').textContent);
+        const catData = JSON.parse(document.getElementById('cat-data-data').textContent);
+
+        const appLabels = JSON.parse(document.getElementById('app-labels-data').textContent);
+        const appData = JSON.parse(document.getElementById('app-data-data').textContent);
 
         // 1. Category Pie Chart
         const ctxCat = document.getElementById('categoryChart').getContext('2d');
