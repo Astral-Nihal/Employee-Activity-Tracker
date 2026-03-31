@@ -1,0 +1,30 @@
+Step 1: Open the Django Shell
+Open your terminal (make sure your venv is activated) and run this command:
+
+python manage.py shell
+
+You will see a >>> prompt appear, meaning you are now inside the Python/Django environment.
+
+Step 2: Create the Accounts
+Copy and paste the following commands one by one (or in chunks) into the shell and press Enter:
+
+# 1. Import your custom User model :
+
+from django.contrib.auth import get_user_model
+User = get_user_model()
+
+# 2. Create an EMPLOYEE account :
+# (create_user automatically encrypts the password securely) :
+
+emp = User.objects.create_user(username='johndoe', password='mypassword123', role='EMPLOYEE')
+
+# (OR)
+
+# 3. Create a MANAGER/HR account :
+
+mgr = User.objects.create_user(username='hrmanager', password='adminpassword123', role='HR')
+
+Step 3: Exit the Shell
+Type this and press Enter to leave the shell and go back to your normal terminal:
+
+exit()

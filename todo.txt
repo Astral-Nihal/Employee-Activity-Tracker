@@ -1,0 +1,6 @@
+open a terminal 1: python manage.py runserver
+open another terminal 2: python desktop_agent.py
+open a browser and go to http://127.0.0.1:8000/admin for backend
+open a browser and go to http://127.0.0.1:8000/api/login for frontend and login as either employee or admin 
+after doing some tasks, close the terminal 2 by pressing ctrl+c, to save the activities done by the employee
+now go to the browser and check the activities done by the employee in the frontend
