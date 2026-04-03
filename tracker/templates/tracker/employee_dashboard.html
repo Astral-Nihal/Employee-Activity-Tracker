@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+{% load tracker_extras %}
 <html lang="en">
 
 <head>
@@ -326,7 +327,7 @@
                             <th>DATE</th>
                             <th>TOTAL TIME</th>
                             <th>PRODUCTIVE TIME</th>
-                            <th>AI SCORE</th>
+                            <th>PRODUCTIVITY SCORE</th>
                             <th>FEEDBACK / NOTES</th>
                         </tr>
                     </thead>
@@ -335,8 +336,8 @@
                         <tr class="border-bottom">
                             <td><span class="text-muted"><i
                                         class="bi bi-calendar-event me-1"></i>{{summary.date}}</span></td>
-                            <td>{{summary.total_working_hours}}h</td>
-                            <td>{{summary.productive_hours}}h</td>
+                            <td>{{summary.total_working_hours|smart_hours}}</td>
+                            <td>{{summary.productive_hours|smart_hours}}</td>
                             <td>
                                 <span class="{% if summary.productivity_score >= 70 %}badge-prohance-high{% elif summary.productivity_score >= 40 %}badge-prohance-med{% else %}badge-prohance-low{% endif %}">
                                     {{summary.productivity_score}}%

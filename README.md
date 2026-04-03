@@ -34,8 +34,8 @@ A full-stack Django-based workforce intelligence platform that monitors employee
 ## Prerequisites
 
 - Python 3.8+
-- MySQL Server running locally (default port `3307` — see [Database Setup](#3-database-setup))
-- Windows (the desktop agent uses `ctypes.windll` for idle-time detection and `pygetwindow` for window title capture)
+- A running MySQL server instance
+- Windows OS (the desktop agent uses `ctypes.windll` for idle-time detection and `pygetwindow` for window title capture)
 
 ---
 
@@ -72,18 +72,20 @@ Create a MySQL database before running migrations:
 CREATE DATABASE monitoring_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-The default connection settings in `monitoringsystem/settings.py` are:
+Then open `monitoringsystem/settings.py` and update the `DATABASES` block with your own MySQL credentials:
 
-| Setting | Value |
-|---|---|
-| Engine | `django.db.backends.mysql` |
-| Database | `monitoring_db` |
-| User | `root` |
-| Password | `1234` |
-| Host | `localhost` |
-| Port | `3307` |
-
-Edit `DATABASES` in `settings.py` if your MySQL credentials or port differ.
+```python
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'monitoring_db',
+        'USER': '<your_mysql_user>',
+        'PASSWORD': '<your_mysql_password>',
+        'HOST': 'localhost',
+        'PORT': '<your_mysql_port>',   # default MySQL port is 3306
+    }
+}
+```
 
 ### 4. Install Dependencies
 
@@ -107,8 +109,6 @@ python manage.py createsuperuser
 ```
 
 After creation, log in to the Django admin panel at `http://127.0.0.1:8000/admin/` and set the user's **role** to `HR` or `ADMIN` to grant access to the HR dashboards. Alternatively, use the Employee Management panel in the web UI once logged in as admin.
-
-> **Tip:** A sample `create_user.txt` is included in the project root with a ready-to-run shell command for creating test accounts programmatically.
 
 ---
 
@@ -148,8 +148,8 @@ Press `Ctrl+C` to gracefully shut down both processes.
 Employee logs in → Browser dashboard loads
         │
         ├─ Server sets is_tracking = True
-        ├─ Browser sends POST /agent/start to localhost:9443
-        │        (passes auth token + user ID to the local agent)
+        ├─ Browser contacts the local desktop agent
+        │       (passes auth token + user ID)
         │
         └─ Desktop Agent wakes up:
                 ├─ Opens a WorkSession (POST /api/sessions/)
@@ -158,13 +158,12 @@ Employee logs in → Browser dashboard loads
 
 Employee clicks Sign Out → confirmSignOut() fires
         ├─ POST /api/toggle-tracking/  (sets is_tracking = False)
-        ├─ POST agent/stop on localhost:9443 (agent sleeps)
+        ├─ Signals the local agent to sleep
         └─ GET /api/logout/ (Django session cleared)
 ```
 
 - The agent uses **Token authentication** for all API calls so it remains authenticated even if the browser session expires.
-- The agent's local HTTP listener runs on **port 9443** and accepts only `127.0.0.1` connections.
-- On sign-out, a background thread waits 10 seconds (one full poll cycle) before running `run_daily_analysis()` so the agent has time to flush its last activity window.
+- On sign-out, a background thread briefly waits before running `run_daily_analysis()` so the agent has time to flush its last activity window.
 
 ---
 
@@ -183,13 +182,6 @@ Employee clicks Sign Out → confirmSignOut() fires
 | `/api/dashboard/hr/reports/` | HR/Admin | Advanced reports |
 | `/api/dashboard/hr/employees/` | HR/Admin | Employee management (CRUD) |
 | `/api/dashboard/hr/export-global/` | HR/Admin | Download global CSV report |
-| `/api/agent-login/` | Agent | Desktop agent login (returns token) |
-| `/api/agent-logout/` | Agent | Desktop agent graceful shutdown |
-| `/api/toggle-tracking/` | Employee | Flip tracking on/off |
-| `/api/tracking-status/` | Agent | Agent polls this to check if it should track |
-| `/api/session-summary/` | Browser | Browser polls for completed session score |
-| `/api/sessions/` | Agent | Create / manage WorkSession records |
-| `/api/activities/` | Agent | Post ActivityLog records |
 | `/admin/` | Superuser | Django admin panel |
 
 ---
@@ -203,7 +195,6 @@ Employee Activity Tracker/
 ├── desktop_agent.py          # Background tracking agent (Windows)
 ├── desktop_agent.spec        # PyInstaller spec (optional standalone build)
 ├── requirements.txt
-├── create_user.txt           # Helper commands for creating test users
 │
 ├── monitoringsystem/         # Django project config
 │   ├── settings.py
@@ -220,6 +211,8 @@ Employee Activity Tracker/
     ├── middleware.py         # SingleSessionMiddleware (single-device login)
     ├── admin.py              # Django admin registrations
     ├── apps.py
+    ├── templatetags/
+    │   └── tracker_extras.py # Custom template filters (e.g. smart_hours)
     └── templates/tracker/
         ├── login.html
         ├── employee_dashboard.html
@@ -241,16 +234,3 @@ Employee Activity Tracker/
 | `ActivityLog` | One record per window/idle window; stores `activity_name`, `activity_type`, `duration_seconds` |
 | `DailySummary` | AI-computed daily rollup: `productivity_score`, `burnout_risk`, `focus_pattern_notes` |
 | `TrackingStatus` | One-to-one with User; `is_tracking` flag read by the desktop agent on every poll |
-
----
-
-## Building a Standalone Agent (Optional)
-
-A `desktop_agent.spec` file is included for packaging the agent into a single `.exe` with PyInstaller:
-
-```bash
-pip install pyinstaller
-pyinstaller desktop_agent.spec
-```
-
-The output executable can be distributed to employee machines without requiring a Python installation.

@@ -491,7 +491,7 @@ def export_my_report(request):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = f'attachment; filename="{request.user.username}_productivity_report.csv"'
     writer = csv.writer(response)
-    writer.writerow(['Date', 'Total Hours', 'Productive Hours', 'AI Score', 'Burnout Risk', 'Notes'])
+    writer.writerow(['Date', 'Total Hours', 'Productive Hours', 'Productivity Score', 'Burnout Risk', 'Notes'])
     for summary in DailySummary.objects.filter(user=request.user).order_by('-date'):
         writer.writerow([summary.date, summary.total_working_hours, summary.productive_hours,
                          summary.productivity_score, summary.burnout_risk, summary.focus_pattern_notes])
@@ -505,7 +505,7 @@ def export_global_report(request):
     response['Content-Disposition'] = 'attachment; filename="Enterprise_Global_Report.csv"'
     writer = csv.writer(response)
     writer.writerow(['Date', 'Employee Username', 'Role', 'Total Hours', 'Productive Hours',
-                     'AI Score', 'Burnout Risk', 'Notes'])
+                     'Productivity Score', 'Burnout Risk', 'Notes'])
 
     summaries = DailySummary.objects.all().select_related('user').order_by('-date')
     for summary in summaries:
