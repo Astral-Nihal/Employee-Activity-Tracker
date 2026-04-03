@@ -474,12 +474,16 @@
             `;
             document.getElementById('signOutActions').style.display = 'none';
 
-            // Step 1: Stop tracking (kicks off background score computation)
+            // Step 1: Stop tracking (kicks off background score computation).
+            // We send BOTH the session cookie AND the Authorization token header so
+            // that this call succeeds even if the session was already invalidated
+            // (e.g. the user also had the Django admin open and logged out there first).
             fetch('/api/toggle-tracking/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': getCookie('csrftoken'),
+                    'Authorization': 'Token ' + AUTH_TOKEN,
                 },
                 credentials: 'same-origin',
             })

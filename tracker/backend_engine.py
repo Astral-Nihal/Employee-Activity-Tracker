@@ -66,7 +66,10 @@ def run_daily_analysis(user_id):
     """
     Analyzes today's logs for a user, calculates scores, and detects burnout risk.
     """
-    user = User.objects.get(id=user_id)
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return None
     today = timezone.now().date()
     
     # Get all logs for today

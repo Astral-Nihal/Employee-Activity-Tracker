@@ -34,6 +34,7 @@ class ActivityLogViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def trigger_ai_analysis(request):
     user_id = request.data.get('user_id')
     if not user_id:
@@ -343,10 +344,11 @@ def employee_dashboard(request):
     chart_labels.reverse()
     chart_scores.reverse()
 
-    # Auto-start tracking whenever the employee opens their dashboard.
-    # This means tracking is always ON when they are logged in — no button needed.
+    # Ensure tracking is ON whenever the employee opens their dashboard.
+    # We always set is_tracking=True here, so we always pass True to the template.
+    # Passing was_already_tracking (the pre-save value) caused a double-toggle bug:
+    # the view would set True, but JS saw False and called toggle → flipped it back to False.
     tracking_obj, _ = TrackingStatus.objects.get_or_create(user=request.user)
-    was_already_tracking = tracking_obj.is_tracking
     if not tracking_obj.is_tracking:
         tracking_obj.is_tracking = True
         tracking_obj.save()
@@ -358,9 +360,10 @@ def employee_dashboard(request):
         'summaries': summaries,
         'chart_labels': json.dumps(chart_labels),
         'chart_scores': json.dumps(chart_scores),
-        # Tell the template whether tracking was already running before this load
-        # (so the JS knows whether to POST toggle-tracking on load or not)
-        'is_tracking': was_already_tracking,
+        # Always True — the view above guarantees is_tracking=True before rendering.
+        # JS uses this to decide whether to call toggle-tracking on page load;
+        # since tracking is already ON, it must NOT call toggle (that would flip it OFF).
+        'is_tracking': True,
         'auth_token': token.key,
         'user_id': request.user.id,
     })

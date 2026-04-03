@@ -124,6 +124,8 @@ def close_session_and_logout():
 
 
 def send_activity_log(session_id, activity_name, start_time, end_time):
+    if not session_id:
+        return  # Guard: no session open yet
     duration = int((end_time - start_time).total_seconds())
     if duration < 1:
         return
